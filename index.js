@@ -13,9 +13,9 @@ app.use(cors({
 app.use(express.json())
 
 const transporter = nodemailer.createTransport({
-  host: "smtp.ethereal.email",
-  port: 587,
-  secure: false, // true for port 465, false for other ports
+  host: "smtp.gmail.com",
+  // port: 465,
+  // secure: true, // true for port 465, false for other ports
   auth: {
     user: process.env.MAIL_USER,
     pass: process.env.MAIL_PASSWORD,
@@ -58,9 +58,11 @@ async function run() {
       const result = await newContact.insertOne(user);
       async function main() {
         // send mail with defined transport object
+        console.log('user email', user.email)
         const info = await transporter.sendMail({
-          from: `"Maddison Foo Koch 👻" ${process.env.MAIL_USER}`, // sender address
-          to: `${user.email}`, // list of receivers
+          from: `"Asib Ahmed 👻" ${process.env.MAIL_USER}`, // sender address
+          replyTo: `${user.email}`,
+          to: `contact@dcit.com.bd`, // list of receivers
           subject: "Hello ✔", // Subject line
           text: "Hello world?", // plain text body
           html: "<b>Hello world?</b>", // html body

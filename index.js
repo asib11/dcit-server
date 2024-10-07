@@ -1,15 +1,26 @@
 const express = require('express');
+const nodemailer = require('nodemailer');
 const app = express();
 const cors = require('cors');
 const port = process.env.PORT || 5000;
 require('dotenv').config()
 
 app.use(cors({
-  origin: ['http://localhost:5173','https://nimble-sorbet-dddb99.netlify.app'],
-  credentials:true,
-  }
+  origin: ['http://localhost:5173', 'https://nimble-sorbet-dddb99.netlify.app'],
+  credentials: true,
+}
 ))
 app.use(express.json())
+
+const transporter = nodemailer.createTransport({
+  host: "smtp.ethereal.email",
+  port: 587,
+  secure: false, // true for port 465, false for other ports
+  auth: {
+    user: process.env.MAIL_USER,
+    pass: process.env.MAIL_PASSWORD,
+  },
+});
 
 
 
@@ -34,17 +45,32 @@ async function run() {
     const database = client.db("dcit");
     const newContact = database.collection("newContact");
 
-    app.get('/users', async(req,res)=>{
+    app.get('/users', async (req, res) => {
       const cursor = newContact.find()
       const result = await cursor.toArray()
       res.send(result)
     })
 
-    app.post('/users', async(req,res)=>{
+    app.post('/users', async (req, res) => {
       const user = req.body;
       console.log('new user', user)
-      
+
       const result = await newContact.insertOne(user);
+      async function main() {
+        // send mail with defined transport object
+        const info = await transporter.sendMail({
+          from: `"Maddison Foo Koch 👻" ${process.env.MAIL_USER}`, // sender address
+          to: `${user.email}`, // list of receivers
+          subject: "Hello ✔", // Subject line
+          text: "Hello world?", // plain text body
+          html: "<b>Hello world?</b>", // html body
+        });
+      
+        console.log("Message sent: %s", info.messageId);
+        // Message sent: <d786aa62-4e0a-070a-47ed-0b0666549519@ethereal.email>
+      }
+      
+      main().catch(console.error);
       res.send(result)
     })
 
@@ -61,10 +87,10 @@ run().catch(console.dir);
 
 
 
-app.get('/',(req, res) =>{
-    res.send('dcit is running')
+app.get('/', (req, res) => {
+  res.send('dcit is running')
 })
 
-app.listen(port, ()=>{
-    console.log(`dcit server port ${port}`)
+app.listen(port, () => {
+  console.log(`dcit server port ${port}`)
 })
